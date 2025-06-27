@@ -35,10 +35,6 @@ main() {
     # For commands not yet implemented as separate files
     case "$command" in
       
-      log)
-        echo "${command^} command not yet implemented."
-        error_exit "Not implemented."
-        ;;
       *)
         error_exit "Unknown command: $command"
         ;;
