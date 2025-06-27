@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# Exit immediately if a command exits with a non-zero status.
+set -euo pipefail
+
+# --- Script's directory ---
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+LIB_DIR="${SCRIPT_DIR}/lib"
+
+# --- Source Helper Functions ---
+# shellcheck source=lib/helpers.sh
+source "${LIB_DIR}/helpers.sh"
+
+# --- Configuration Variables ---
+CONFIG_DIR="${HOME}/.config/gmd"
+CONFIG_FILE="${CONFIG_DIR}/config.toml"
+# Define cache dir for commands that might need it
+CACHE_DIR="${HOME}/.cache/gmd"
+
+
+# --- Main Logic ---
+main() {
+  if [[ $# -eq 0 ]]; then
+    echo "Usage: gmd <command> [options]"
+    echo "Commands: init, sync, restore, status, list, log"
+    exit 1
+  fi
+
+  local command="$1"
+  shift # Remove command from arguments
+
+  local cmd_script="${LIB_DIR}/cmd_${command}.sh"
+
+  if [[ ! -f "$cmd_script" ]]; then
+    # For commands not yet implemented as separate files
+    case "$command" in
+      
+      list|log)
+        echo "${command^} command not yet implemented."
+        error_exit "Not implemented."
+        ;;
+      *)
+        error_exit "Unknown command: $command"
+        ;;
+    esac
+  fi
+
+  # Source and execute the command script
+  # shellcheck source=lib/cmd_init.sh
+  # shellcheck source=lib/cmd_sync.sh
+  source "$cmd_script"
+  "cmd_${command}" "$@"
+}
+
+main "$@"
