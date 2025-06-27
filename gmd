@@ -35,7 +35,7 @@ main() {
     # For commands not yet implemented as separate files
     case "$command" in
       
-      list|log)
+      log)
         echo "${command^} command not yet implemented."
         error_exit "Not implemented."
         ;;
