@@ -4,7 +4,7 @@ This document outlines the development plan and specifications for the `gmd-cli`
 
 ## 1. Project Overview
 
-`gmd-cli` is a command-line interface (CLI) tool written in Go. Its primary purpose is to help developers manage and version-control `GEMINI.md` files independently from their main project repositories.
+`gmd-cli` is a command-line interface (CLI) tool written entirely in **Bash script**. Its primary purpose is to help developers manage and version-control `GEMINI.md` files independently from their main project repositories.
 
 This solves the common problem where company policies restrict committing tool-specific configuration files (like `GEMINI.md`) into the primary codebase. `gmd-cli` allows these files to be tracked in a separate, private Git repository, providing versioning benefits without polluting the project's history.
 
@@ -12,15 +12,15 @@ This solves the common problem where company policies restrict committing tool-s
 
 The system operates on a **dual-repository model**:
 
-1.  **Tool Repository (`gmd-cli`)**: This public repository contains the Go source code for the `gmd` tool itself. It is a standard software project.
+1.  **Tool Repository (`gmd-cli`)**: This public repository contains the Bash script source code for the `gmd` tool itself. It is a standard software project.
 2.  **Data Vault Repository (`gemini-md-vault`)**: This is a separate, user-owned **private** Git repository. It acts as a centralized "vault" to store the `GEMINI.md` files from all of the user's projects.
 
-The `gmd` executable is the orchestrator that synchronizes files between a user's local project directories and their private data vault.
+The `gmd` script is the orchestrator that synchronizes files between a user's local project directories and their private data vault.
 
 ## 3. Technical Stack
 
-- **Language**: Go (Golang)
-- **Reasoning**: Chosen for its ability to produce single, dependency-free, cross-platform binary executables, which provides the best user experience for a CLI tool. Its strong standard library for file system and command execution is perfectly suited for this task.
+- **Language**: Bash Script
+- **Reasoning**: Chosen for its native integration with Unix-like environments, direct access to system commands (`git`, `find`, `cp`, `ssh-agent`), and its ability to inherit the shell's environment, which is crucial for reliable SSH authentication. This approach avoids the complexities encountered with Go's `os/exec` and `go-git` libraries in handling SSH agents and `known_hosts` in non-interactive contexts. It provides a zero-dependency runtime for Linux/macOS users and simplifies distribution.
 
 ## 4. Configuration
 
@@ -93,20 +93,21 @@ The tool will be invoked as `gmd`.
 
 1.  **Phase 1: Foundation**
 
-    - Set up the Go project structure (`go mod init gmd-cli`).
-    - Implement the configuration logic (`init` command and reading from `~/.config/gmd/config.toml`).
-    - Use a CLI framework library like `cobra` or `urfave/cli` to structure the commands.
+    - Define the overall script structure and entry point (`gmd` script).
+    - Implement basic argument parsing for subcommands (`init`, `sync`, etc.).
+    - Implement the `init` command: create config directory, `config.toml`, and prompt for `vault_url`.
 
 2.  **Phase 2: Core Logic**
 
-    - Implement the `sync` command. This is the most critical feature. It involves file scanning (`filepath.Walk`) and Git command execution (`os/exec`).
-    - Implement the `restore` command.
+    - Implement the `sync` command: find project root, scan `GEMINI.md` files, clone vault, copy files, and perform `git add`, `git commit`, `git push`.
+    - Implement the `restore` command: clone vault, copy files back to project.
 
 3.  **Phase 3: Read-only Commands**
 
     - Implement `status`, `list`, and `log`.
 
-4.  **Phase 4: Refinement**
+4.  **Phase 4: Refinement & Distribution**
     - Add robust error handling and user-friendly output.
-    - Write unit and integration tests.
-    - Set up a build pipeline (e.g., using GitHub Actions) to automate cross-platform builds and releases.
+    - Implement modularity (e.g., separate functions for common tasks).
+    - Consider a build process to combine multiple scripts into a single executable for distribution.
+    - Write comprehensive tests for Bash scripts.
